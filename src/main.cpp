@@ -44,8 +44,7 @@ double polyeval(Eigen::VectorXd coeffs, double x) {
 // Fit a polynomial.
 // Adapted from
 // https://github.com/JuliaMath/Polynomials.jl/blob/master/src/Polynomials.jl#L676-L716
-Eigen::VectorXd polyfit(Eigen::VectorXd xvals, Eigen::VectorXd yvals,
-                        int order) {
+Eigen::VectorXd polyfit(Eigen::VectorXd xvals, Eigen::VectorXd yvals, int order) {
   assert(xvals.size() == yvals.size());
   assert(order >= 1 && order <= xvals.size() - 1);
   Eigen::MatrixXd A(xvals.size(), order + 1);
@@ -95,12 +94,15 @@ int main() {
           double cospsi = cos(-psi);
           double sinpsi = sin(-psi);
 
+          int N = ptsx.size();
+
           // trasnform waypoints to vehicle coord frame
-          size_t N = ptsx.size();
+          // in the vehicle's frame, cte and epsi simplify
+          // and it's easier to use polyfit on the waypoints
           Eigen::VectorXd wptsx = Eigen::VectorXd(N);
           Eigen::VectorXd wptsy = Eigen::VectorXd(N);
 
-          for (size_t i = 0; i < N; i++) {
+          for (int i = 0; i < N; i++) {
             double dx = ptsx[i] - px;
             double dy = ptsy[i] - py;
             wptsx[i] = dx * cospsi - dy * sinpsi;
@@ -110,7 +112,9 @@ int main() {
           auto coeffs = polyfit(wptsx, wptsy, 3);
 
           double cte = polyeval(coeffs, 0);
-          double epsi = atan(coeffs[1]);
+
+          // epsi = psi - atan(coeffs[1] + 2*px*coeffs[2] + 3*coeffs[3]*pow(px, 2))
+          double epsi = -atan(coeffs[1]); // above evaluated at px=0 and psi=0
 
           Eigen::VectorXd state(6);
           state << 0, 0, 0, v, cte, epsi;
@@ -123,7 +127,7 @@ int main() {
           json msgJson;
           // NOTE: Remember to divide by deg2rad(25) before you send the steering value back.
           // Otherwise the values will be in between [-deg2rad(25), deg2rad(25] instead of [-1, 1].
-          msgJson["steering_angle"] = -steer_value/deg2rad(25);
+          msgJson["steering_angle"] = -steer_value/(deg2rad(25) * Lf);
           msgJson["throttle"] = throttle_value;
 
           msgJson["mpc_x"] = mpc.px;
@@ -133,9 +137,9 @@ int main() {
           vector<double> next_x_vals;
           vector<double> next_y_vals;
 
-          for (size_t i = 0; i < N; i++) {
-            next_x_vals.push_back(wptsx[i]);
-            next_y_vals.push_back(wptsy[i]);
+          for (int i = 0; i < 60; i += 3) {
+            next_x_vals.push_back(i);
+            next_y_vals.push_back(polyeval(coeffs, i));
           }
 
           msgJson["next_x"] = next_x_vals;
@@ -143,7 +147,8 @@ int main() {
 
 
           auto msg = "42[\"steer\"," + msgJson.dump() + "]";
-          std::cout << msg << std::endl;
+          /* std::cout << msg << std::endl; */
+
           // Latency
           // The purpose is to mimic real driving conditions where
           // the car does actuate the commands instantly.

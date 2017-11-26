@@ -6,25 +6,13 @@
 using CppAD::AD;
 
 
-const size_t N = 25;
-const double dt = 0.05;
-
-// This value assumes the model presented in the classroom is used.
-//
-// It was obtained by measuring the radius formed by running the vehicle in the
-// simulator around in a circle with a constant steering angle and velocity on a
-// flat terrain.
-//
-// Lf was tuned until the the radius formed by the simulating the model
-// presented in the classroom matched the previous radius.
-//
-// This is the length from front to CoG that has a similar radius.
-const double Lf = 2.67;
+const size_t N = 12;
+const double dt = 0.1;
 
 // The solver takes all the state variables and actuator
 // variables in a singular vector. Thus, we should to establish
 // when one variable starts and another ends to make our lifes easier.
-const double ref_v  = 60;
+const double ref_v  = 100;
 
 const size_t x_start      = 0;
 const size_t y_start      = x_start + N;
@@ -50,8 +38,8 @@ class FG_eval {
 
       // The part of the cost based on the reference state.
       for (size_t t = 0; t < N; t++) {
-        fg[0] += CppAD::pow(vars[cte_start + t], 2);
-        fg[0] += CppAD::pow(vars[epsi_start + t], 2);
+        fg[0] += 2000 * CppAD::pow(vars[cte_start + t], 2);
+        fg[0] += 2000 * CppAD::pow(vars[epsi_start + t], 2);
         fg[0] += CppAD::pow(vars[v_start + t] - ref_v, 2);
       }
 
@@ -63,7 +51,7 @@ class FG_eval {
 
       // Minimize the value gap between sequential actuations.
       for (size_t t = 0; t < N - 2; t++) {
-        fg[0] += CppAD::pow(vars[delta_start + t + 1] - vars[delta_start + t], 2);
+        fg[0] += 200 * CppAD::pow(vars[delta_start + t + 1] - vars[delta_start + t], 2);
         fg[0] += CppAD::pow(vars[a_start + t + 1] - vars[a_start + t], 2);
       }
 
@@ -101,8 +89,8 @@ class FG_eval {
         AD<double> delta0 = vars[delta_start + t - 1];
         AD<double> a0     = vars[a_start + t - 1];
 
-        AD<double> f0       = coeffs[0] + coeffs[1] * x0;
-        AD<double> psides0  = CppAD::atan(coeffs[1]);
+        AD<double> f0       = coeffs[0] + x0*coeffs[1] + CppAD::pow(x0,2)*coeffs[2] + CppAD::pow(x0,3)*coeffs[3];
+        AD<double> psides0  = CppAD::atan(3*CppAD::pow(x0,2)*coeffs[3] + 2*x0*coeffs[2] + coeffs[1]);
 
         // The idea here is to constraint these values to zero.
         // model equations:
@@ -144,9 +132,9 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
   // element vector and there are 10 timesteps. The number of variables is:
   //
   // 4 * 10 + 2 * 9
-  size_t n_vars = 6*N + 2*(N-1);
+  size_t n_vars = 6 * N + 2 * (N-1);
   // Set the number of constraints
-  size_t n_constraints = 6*N;
+  size_t n_constraints = 6 * N;
 
   // Initial value of the independent variables.
   // Should be 0 except for the initial values.
@@ -177,8 +165,8 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
   // degrees (values in radians).
   // NOTE: Feel free to change this to something else.
   for (size_t i = delta_start; i < a_start; i++) {
-    vars_lowerbound[i] = -0.436332;
-    vars_upperbound[i] = 0.436332;
+    vars_lowerbound[i] = -0.436332*Lf;
+    vars_upperbound[i] = 0.436332*Lf;
   }
 
   // Acceleration/decceleration upper and lower limits.
