@@ -36,6 +36,10 @@ For the final submission, I set the reference velocity at 70, but it does work a
 
 For stricter center lane driving, I keep the high weight on delta, but also increase the `cte` and `epsi` weights.
 
+**Latency**
+
+The waypoints coordinates are in the map reference, these need to be transformed into the vehicles coordinate system to make it easier to run the MPC. After transforming the waypoints, the vehicle model is used to predict it's state one timestep into the future. By predicting the future state, this accounts for the latency in the controller. Another way would be using the last executed control and the cars current state.
+
 #### Installation
 This project requires the Udacity Term 2 Simulator which can be downloaded [here](https://github.com/udacity/self-driving-car-sim/releases).
 
