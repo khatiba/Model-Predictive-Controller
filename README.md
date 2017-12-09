@@ -1,6 +1,6 @@
 [//]: # (Image References)
 [animation]: ./animation.gif
-[model]: ./model.png
+[model]: ./model-equations.png
 
 
 # Model Predictive Controller 
