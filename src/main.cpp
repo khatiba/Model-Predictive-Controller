@@ -86,10 +86,12 @@ int main() {
           vector<double> ptsx = j[1]["ptsx"];
           vector<double> ptsy = j[1]["ptsy"];
 
-          double px = j[1]["x"];
-          double py = j[1]["y"];
-          double psi = j[1]["psi"];
-          double v = j[1]["speed"];
+          double px     = j[1]["x"];
+          double py     = j[1]["y"];
+          double psi    = j[1]["psi"];
+          double v      = j[1]["speed"];
+          double delta  = j[1]["steering_angle"];
+          double a      = j[1]["throttle"];
 
           double cospsi = cos(-psi);
           double sinpsi = sin(-psi);
@@ -116,18 +118,25 @@ int main() {
           // epsi = psi - atan(coeffs[1] + 2*px*coeffs[2] + 3*coeffs[3]*pow(px, 2))
           double epsi = -atan(coeffs[1]); // above evaluated at px=0 and psi=0
 
+          // predict the cars future state to account for latency in the control
           Eigen::VectorXd state(6);
-          state << 0, 0, 0, v, cte, epsi;
+          state <<
+            v * dt,
+            0,
+            -v * delta * dt / Lf,
+            v + a * dt,
+            cte + v * sin(epsi) * dt,
+            epsi - v * delta * dt / Lf;
 
           auto results = mpc.Solve(state, coeffs);
 
-          double steer_value = results[6];
-          double throttle_value = results[7];
+          double steer_value = results[0];
+          double throttle_value = results[1];
 
           json msgJson;
           // NOTE: Remember to divide by deg2rad(25) before you send the steering value back.
           // Otherwise the values will be in between [-deg2rad(25), deg2rad(25] instead of [-1, 1].
-          msgJson["steering_angle"] = -steer_value/(deg2rad(25) * Lf);
+          msgJson["steering_angle"] = -steer_value/deg2rad(25);
           msgJson["throttle"] = throttle_value;
 
           msgJson["mpc_x"] = mpc.px;
@@ -137,7 +146,7 @@ int main() {
           vector<double> next_x_vals;
           vector<double> next_y_vals;
 
-          for (int i = 0; i < 60; i += 3) {
+          for (int i = 3; i < 80; i += 3) {
             next_x_vals.push_back(i);
             next_y_vals.push_back(polyeval(coeffs, i));
           }

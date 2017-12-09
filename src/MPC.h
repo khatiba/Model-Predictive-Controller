@@ -18,6 +18,8 @@ using namespace std;
 //
 // This is the length from front to CoG that has a similar radius.
 const double Lf = 2.67;
+const size_t N = 14;
+const double dt = 0.1;
 
 
 class MPC {
