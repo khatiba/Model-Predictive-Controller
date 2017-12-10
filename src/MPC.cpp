@@ -10,6 +10,7 @@ using CppAD::AD;
 // variables in a singular vector. Thus, we should to establish
 // when one variable starts and another ends to make our lifes easier.
 const double ref_v    = 70;
+
 const double w_cte    = 40;
 const double w_epsi   = 10;
 const double w_delta  = 60000;
@@ -240,9 +241,9 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
 
   px.clear();
   py.clear();
-  for (size_t i = 0; i < N - 1; i++) {
-    px.push_back(solution.x[x_start + i + 1]);
-    py.push_back(solution.x[y_start + i + 1]);
+  for (size_t i = 0; i < N; i++) {
+    px.push_back(solution.x[x_start + i]);
+    py.push_back(solution.x[y_start + i]);
   }
 
   return {
