@@ -7,38 +7,51 @@
 Udacity Self-Driving Car Engineer Nanodegree Program
 
 
-## Project Introduction
-In this project I implement a model predictive controller in C++. The controller must drive a car around a track without crashing. The simulator also introduces latency between issuing and executing commands.
-
 ![alt text][animation]
 
-
-The MPC uses the following vehicle model. The reference model looks ahead 10 steps at a time delta of 0.1s (1s future prediction).
+## Project Introduction
+In this project I implement a model predictive controller in C++. The controller must drive a car around a track without running off the road or up onto the curbs. The simulator also introduces latency between issuing and executing commands to simulate driver behavior. The MPC uses the following vehicle model.
 
 ![alt text][model]
 
+**MPC**
 
-After some testing and tweaking of the cost function weights, I used the following:
+The MPC optimizes a cost function that penalizes cross track error, steering angle, usage of actuators and differences between actuations to smooth the control. After some testing and tweaking of the cost function weights, I used the following:
 
 ```
-ref_v    = 70;
-w_cte    = 30;
-w_epsi   = 20;
-w_delta  = 500000;
-w_ddelta = 20;
+ref_v    = 70
+w_cte    = 800
+w_epsi   = 10
+w_delta  = 575000
+w_ddelta = 200000
+w_da     = 0.00001
 ```
 
 Note that I heavily penalized `delta` I found this necessary to reduce erratic and large stearing angles which led to unstable driving.
 
 I used these weights because I wanted to run the track at high speed and similar to race cars, eg: driving the apex of a turn rather than staying center through a curve.
 
-For the final submission, I set the reference velocity at 70, but it does work at 100 as well.
+For the final submission, I set the reference velocity at 70. For stricter center lane driving, I keep the high weight on delta, but also increase the `cte` and `epsi` weights.
 
-For stricter center lane driving, I keep the high weight on delta, but also increase the `cte` and `epsi` weights.
+**Prediction Horizon**
+
+At low speeds, the prediction horizon (T) can be lower since the state of the car is more easily adjusted when approaching unknown conditions. The model must predict further into the future at high speeds to account for unknown road conditions that would be harder to control. However, the model should predict at most a few seconds into the future since road conditions are likely to change enough that any further wouldn't add value.
+
+Changing `dt` affects how often a control is executed, larger values lead to "discretization error". Choosing smaller values makes approximation of the reference trajectory more accurate but at the cost of performance since more time steps are needed to extend the prediction horizon. For this project, it is set to match the latency of `100ms`.
+
+Tuning the time horizon parameters is a trade-off between performance and accuracy. I experimented with many combinations of horizon length and speeds. I found values that worked well for a reference speed of 70mph since the majority of roads in the US are at or below that limit.
+
+```
+N = 18
+dt = 0.1
+
+Horizon (T) = 1.8 seconds
+```
 
 **Latency**
 
-The waypoints coordinates are in the map reference, these need to be transformed into the vehicles coordinate system to make it easier to run the MPC. After transforming the waypoints, the vehicle model is used to predict it's state one timestep into the future. By predicting the future state, this accounts for the latency in the controller. Another way would be using the last executed control and the cars current state.
+The waypoints coordinates are in the map reference, these need to be transformed into the vehicle's coordinate system to make further calculations easier. After transforming the waypoints, the vehicle model is used to predict it's state one timestep into the future. The timestep `dt` matches the latency in the simulation of `100ms`. By predicting and optimizing around the future state, this accounts for the latency in the controller. Another way would be using the previously executed control and the cars current state.
+
 
 #### Installation
 This project requires the Udacity Term 2 Simulator which can be downloaded [here](https://github.com/udacity/self-driving-car-sim/releases).

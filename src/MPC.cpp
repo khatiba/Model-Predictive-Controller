@@ -10,10 +10,11 @@ using CppAD::AD;
 // variables in a singular vector. Thus, we should to establish
 // when one variable starts and another ends to make our lifes easier.
 const double ref_v    = 70;
-const double w_cte    = 30;
-const double w_epsi   = 20;
-const double w_delta  = 500000;
-const double w_ddelta = 20;
+const double w_cte    = 40;
+const double w_epsi   = 10;
+const double w_delta  = 60000;
+const double w_ddelta = 2000;
+const double w_da     = 0.00001;
 
 
 const size_t x_start      = 0;
@@ -54,7 +55,7 @@ class FG_eval {
       // Minimize the value gap between sequential actuations.
       for (size_t t = 0; t < N - 2; t++) {
         fg[0] += w_ddelta * CppAD::pow(vars[delta_start + t + 1] - vars[delta_start + t], 2);
-        /* fg[0] += CppAD::pow(vars[a_start + t + 1] - vars[a_start + t], 2); */
+        fg[0] += w_da * CppAD::pow(vars[a_start + t + 1] - vars[a_start + t], 2);
       }
 
       // Initial constraints
@@ -234,8 +235,8 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
   ok &= solution.status == CppAD::ipopt::solve_result<Dvector>::success;
 
   // Cost
-  auto cost = solution.obj_value;
-  std::cout << "Cost " << cost << std::endl;
+  /* auto cost = solution.obj_value; */
+  /* std::cout << "Cost " << cost << std::endl; */
 
   px.clear();
   py.clear();
