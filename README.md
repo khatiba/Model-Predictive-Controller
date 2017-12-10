@@ -10,9 +10,19 @@ Udacity Self-Driving Car Engineer Nanodegree Program
 ![alt text][animation]
 
 ## Project Introduction
-In this project I implement a model predictive controller in C++. The controller must drive a car around a track without running off the road or up onto the curbs. The simulator also introduces latency between issuing and executing commands to simulate driver behavior. The MPC uses the following vehicle model.
+In this project I implement a model predictive controller in C++. The controller must drive a car around a track without running off the road or up onto the curbs. The simulator also introduces latency between issuing and executing commands to simulate driver behavior.
+
+
+## Model
 
 ![alt text][model]
+
+The MPC uses the following vehicle equations of motion. The vehicle state is given by `x, y` position, `ψ` heading, velocity `v`. The controls are stearing angle `δ` and accelleration `a`.
+
+The constraints on stearing angle is `[-25°, +25°]`, and accelleration `[-1, 1]`.
+
+L<sub>f</sub> = 2.67 is given and is the distance between the front of the vehicle and its center of gravity.
+
 
 **MPC**
 
@@ -20,10 +30,10 @@ The MPC optimizes a cost function that penalizes cross track error, steering ang
 
 ```
 ref_v    = 70
-w_cte    = 800
+w_cte    = 40
 w_epsi   = 10
-w_delta  = 575000
-w_ddelta = 200000
+w_delta  = 60000
+w_ddelta = 2000
 w_da     = 0.00001
 ```
 
