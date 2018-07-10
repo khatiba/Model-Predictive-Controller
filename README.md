@@ -1,5 +1,4 @@
 [//]: # (Image References)
-[animation]: -bl ./animation.gif
 [model]: ./model-equations.png
 
 
@@ -7,7 +6,7 @@
 Udacity Self-Driving Car Engineer Nanodegree Program
 
 
-![alt text][animation]
+./animation.gif -bl /animation.gif
 
 ## Project Introduction
 In this project I implement a model predictive controller in C++. The controller must drive a car around a track without running off the road or up onto the curbs. The simulator also introduces latency between issuing and executing commands to simulate driver behavior.
