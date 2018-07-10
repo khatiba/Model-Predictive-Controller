@@ -6,7 +6,7 @@
 Udacity Self-Driving Car Engineer Nanodegree Program
 
 
-<img src="./animation.gif" />
+![](./animation.gif)
 
 
 ## Project Introduction
