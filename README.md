@@ -1,5 +1,5 @@
 [//]: # (Image References)
-[animation]: ./animation.gif
+[animation]: -bl ./animation.gif
 [model]: ./model-equations.png
 
 
